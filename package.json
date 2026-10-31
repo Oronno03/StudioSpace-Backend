@@ -1,0 +1,30 @@
+{
+  "name": "studiospace-backend",
+  "version": "1.0.0",
+  "description": "StudioSpace API — Peer-to-Peer Creative Workspace & Production Studio Sharing Platform",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js",
+    "seed": "node src/seed.js"
+  },
+  "keywords": [
+    "studiospace",
+    "studio",
+    "booking",
+    "express",
+    "mongodb"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.3.0",
+    "google-auth-library": "^11.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.1.5"
+  }
+}
