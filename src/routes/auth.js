@@ -85,11 +85,26 @@ router.post("/login", async (req, res) => {
 // The frontend obtains a Google ID token from Google Identity Services and posts it here.
 // We verify it against GOOGLE_CLIENT_ID when configured.
 router.post("/google", async (req, res) => {
-  const { credential, name, email, photoURL } = req.body || {};
+  const { credential, name, email, photoURL, demo } = req.body || {};
 
   let verifiedEmail = null;
   let verifiedName = null;
   let verifiedPhoto = null;
+
+  // Development demo mode — only honored while GOOGLE_CLIENT_ID is unset,
+  // so a production deployment can never be tricked into it.
+  if (demo && !process.env.GOOGLE_CLIENT_ID) {
+    let demoUser = await User.findOne({ email: "demo@studiospace.dev" });
+    if (!demoUser) {
+      demoUser = await User.create({
+        name: "Demo Explorer",
+        email: "demo@studiospace.dev",
+        photoURL: "https://i.pravatar.cc/160?img=68",
+      });
+    }
+    setAuthCookie(res, signToken({ id: demoUser._id, email: demoUser.email, name: demoUser.name }));
+    return res.json({ user: publicUser(demoUser), message: "Signed in with Google (demo mode)." });
+  }
 
   if (credential) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
