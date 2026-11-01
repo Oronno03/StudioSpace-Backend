@@ -20,7 +20,7 @@ function hoursBetween(startTime, endTime) {
 
 // ---------- Create booking (Challenge 1: auth + Challenge 2: overlap check) ----------
 router.post("/", requireAuth, async (req, res) => {
-  const { studioId, date, startTime, endTime, hours, totalPrice, status } = req.body || {};
+  const { studioId, date, startTime, endTime, hours, totalPrice } = req.body || {};
 
   if (!studioId || !date || !startTime || !endTime) {
     return res.status(400).json({ message: "Studio, date and time range are required." });
@@ -69,7 +69,8 @@ router.post("/", requireAuth, async (req, res) => {
     endTime,
     hours: computedHours,
     totalPrice: computedTotal,
-    status: status === "Confirmed" ? "Confirmed" : "Pending",
+    // New reservations always start Pending — only the host can confirm.
+    status: "Pending",
   });
 
   res.status(201).json({ booking, message: "Booking request sent — awaiting host confirmation." });
