@@ -50,3 +50,17 @@ npm run dev               # starts http://localhost:5000
 
 1. **JWT in HTTPOnly cookies** — all mutations (`POST /api/studios`, `DELETE /api/studios/:id`, `POST /api/bookings`, …) reject unauthenticated requests with `401 Unauthorized`.
 2. **Double-booking prevention** — `POST /api/bookings` checks the requested window against existing *Confirmed* bookings for the same studio and rejects overlaps with `409 Conflict`.
+
+## Testing
+
+```bash
+node tests/api.test.mjs
+```
+
+Runs 34 end-to-end assertions against a running server + seeded data: health, listing filters, auth guards, registration validation, studio CRUD, booking workflow, overlap rejection, cancellation rules, wishlist and logout.
+
+## Notes
+
+- New bookings always start as `Pending`; only the studio owner can confirm, complete or decline them (`PATCH /api/bookings/:id/status`).
+- Google sign-in verifies ID tokens against `GOOGLE_CLIENT_ID`; if the variable is empty it falls back to a demo mode for local development only.
+- `.env` is git-ignored — use `.env.example` as the template.
