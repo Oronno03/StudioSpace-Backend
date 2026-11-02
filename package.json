@@ -1,9 +1,9 @@
 {
   "name": "studiospace-backend",
   "version": "1.0.0",
-  "description": "StudioSpace API — Peer-to-Peer Creative Workspace & Production Studio Sharing Platform",
+  "description": "StudioSpace API - Peer-to-Peer Creative Workspace & Production Studio Sharing Platform",
   "main": "index.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "dev": "node --watch index.js",
     "start": "node index.js",

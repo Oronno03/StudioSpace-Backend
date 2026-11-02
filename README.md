@@ -4,7 +4,7 @@ Backend for **StudioSpace** — a peer-to-peer creative workspace & production s
 
 🔗 **Live API:** https://studiospace-api-flax.vercel.app/api/health
 
-- **Runtime:** Node.js + Express 5
+- **Runtime:** Node.js + Express 5 (ES modules, `"type": "module"`)
 - **Database:** MongoDB (Mongoose)
 - **Auth:** JWT stored in an **HTTPOnly cookie** (Challenge 1), plus Google sign-in
 - **Security:** password hashing with bcryptjs, CORS restricted to the client origin

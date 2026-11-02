@@ -1,9 +1,9 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const Studio = require("../models/Studio");
-const Booking = require("../models/Booking");
-const User = require("../models/User");
-const { requireAuth } = require("../middleware/auth");
+import express from "express";
+import mongoose from "mongoose";
+import Studio from "../models/Studio.js";
+import Booking from "../models/Booking.js";
+import User from "../models/User.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -169,4 +169,4 @@ router.delete("/:id", requireAuth, async (req, res) => {
   res.json({ message: "Studio deleted." });
 });
 
-module.exports = router;
+export default router;

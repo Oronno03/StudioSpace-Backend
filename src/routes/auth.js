@@ -1,13 +1,13 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const { OAuth2Client } = require("google-auth-library");
-const User = require("../models/User");
-const {
+import express from "express";
+import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
+import User from "../models/User.js";
+import {
   signToken,
   requireAuth,
   setAuthCookie,
   clearAuthCookie,
-} = require("../middleware/auth");
+} from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -168,5 +168,5 @@ router.post("/logout", (req, res) => {
   res.json({ message: "Logged out." });
 });
 
-module.exports = router;
-module.exports.PASSWORD_RULES = PASSWORD_RULES;
+export { PASSWORD_RULES };
+export default router;

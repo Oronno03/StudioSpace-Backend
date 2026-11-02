@@ -7,13 +7,13 @@
  * Demo guest:  harry@studiospace.dev  / Password123
  * Demo host:   maya@studiospace.dev   / Password123
  */
-require("dotenv").config();
-const bcrypt = require("bcryptjs");
-const mongoose = require("mongoose");
-const connectDB = require("./db");
-const User = require("./models/User");
-const Studio = require("./models/Studio");
-const Booking = require("./models/Booking");
+import "dotenv/config";
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+import connectDB from "./db.js";
+import User from "./models/User.js";
+import Studio from "./models/Studio.js";
+import Booking from "./models/Booking.js";
 
 const studios = [
   {

@@ -1,14 +1,14 @@
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
-const connectDB = require("./db");
-const authRoutes = require("./routes/auth");
-const studioRoutes = require("./routes/studios");
-const bookingRoutes = require("./routes/bookings");
-const wishlistRoutes = require("./routes/wishlist");
-const { attachUser } = require("./middleware/auth");
+import connectDB from "./db.js";
+import authRoutes from "./routes/auth.js";
+import studioRoutes from "./routes/studios.js";
+import bookingRoutes from "./routes/bookings.js";
+import wishlistRoutes from "./routes/wishlist.js";
+import { attachUser } from "./middleware/auth.js";
 
 const app = express();
 
@@ -65,4 +65,4 @@ app.use((err, req, res, next) => {
     .json({ message: err.message || "Something went wrong" });
 });
 
-module.exports = app;
+export default app;

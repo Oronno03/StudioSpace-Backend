@@ -1,8 +1,8 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const Booking = require("../models/Booking");
-const Studio = require("../models/Studio");
-const { requireAuth } = require("../middleware/auth");
+import express from "express";
+import mongoose from "mongoose";
+import Booking from "../models/Booking.js";
+import Studio from "../models/Studio.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -143,4 +143,4 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
   res.json({ booking, message: `Booking marked as ${status}.` });
 });
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 /**
  * Connect to MongoDB. Cached across hot-reloads in development so
@@ -20,4 +20,4 @@ async function connectDB() {
   return mongoose.connection;
 }
 
-module.exports = connectDB;
+export default connectDB;

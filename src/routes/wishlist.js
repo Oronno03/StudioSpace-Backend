@@ -1,8 +1,8 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const User = require("../models/User");
-const Studio = require("../models/Studio");
-const { requireAuth } = require("../middleware/auth");
+import express from "express";
+import mongoose from "mongoose";
+import User from "../models/User.js";
+import Studio from "../models/Studio.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -38,4 +38,4 @@ router.post("/:studioId/toggle", requireAuth, async (req, res) => {
   res.json({ saved: !has, count: user.wishlist.length });
 });
 
-module.exports = router;
+export default router;

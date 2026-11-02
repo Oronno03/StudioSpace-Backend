@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -35,4 +35,4 @@ const studioSchema = new mongoose.Schema(
 // Text index powers the search box on /studios
 studioSchema.index({ title: "text", location: "text", overview: "text", category: "text" });
 
-module.exports = mongoose.model("Studio", studioSchema);
+export default mongoose.model("Studio", studioSchema);

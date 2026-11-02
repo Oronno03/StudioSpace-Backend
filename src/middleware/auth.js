@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 const COOKIE_NAME = "studiospace_token";
 
@@ -73,7 +73,7 @@ function clearAuthCookie(res) {
   res.clearCookie(COOKIE_NAME, authCookieOptions());
 }
 
-module.exports = {
+export {
   COOKIE_NAME,
   signToken,
   attachUser,
