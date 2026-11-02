@@ -65,6 +65,7 @@ Runs 34 end-to-end assertions against a running server + seeded data: health, li
 
 The API is deployed as a Vercel Function. `index.js` exports the Express app from
 `src/app.js`, while the same file keeps the local `app.listen` path for development.
+Pushes to `main` automatically deploy to production through Vercel’s GitHub integration.
 
 Production environment variables:
 
