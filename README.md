@@ -2,6 +2,8 @@
 
 Backend for **StudioSpace** — a peer-to-peer creative workspace & production studio sharing platform.
 
+🔗 **Live API:** https://studiospace-api-flax.vercel.app/api/health
+
 - **Runtime:** Node.js + Express 5
 - **Database:** MongoDB (Mongoose)
 - **Auth:** JWT stored in an **HTTPOnly cookie** (Challenge 1), plus Google sign-in
@@ -58,6 +60,24 @@ node tests/api.test.mjs
 ```
 
 Runs 34 end-to-end assertions against a running server + seeded data: health, listing filters, auth guards, registration validation, studio CRUD, booking workflow, overlap rejection, cancellation rules, wishlist and logout.
+
+## Deployment
+
+The API is deployed as a Vercel Function. `index.js` exports the Express app from
+`src/app.js`, while the same file keeps the local `app.listen` path for development.
+
+Production environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `MONGODB_URI` | MongoDB Atlas connection string |
+| `JWT_SECRET` | Signs the HTTPOnly session cookie |
+| `CLIENT_ORIGIN` | Comma-separated allowed frontend origins |
+| `GOOGLE_CLIENT_ID` | Verifies Google ID tokens |
+| `COOKIE_CROSS_SITE` | `true` on Vercel so the session cookie uses `SameSite=None; Secure` |
+
+MongoDB Atlas must allow the Vercel function's outbound IPs. For this demo the
+Atlas network access list includes `0.0.0.0/0`.
 
 ## Notes
 

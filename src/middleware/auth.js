@@ -46,18 +46,31 @@ function requireOwner(ownerEmailGetter) {
   };
 }
 
+function authCookieOptions() {
+  // The deployed client and API live on different Vercel domains, so the
+  // session cookie must be SameSite=None; Secure. Local development keeps
+  // the friendlier Lax default.
+  const crossSite =
+    process.env.COOKIE_CROSS_SITE === "true" ||
+    process.env.NODE_ENV === "production";
+
+  return {
+    httpOnly: true,
+    sameSite: crossSite ? "none" : "lax",
+    secure: crossSite,
+    path: "/",
+  };
+}
+
 function setAuthCookie(res, token) {
   res.cookie(COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    ...authCookieOptions(),
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: "/",
   });
 }
 
 function clearAuthCookie(res) {
-  res.clearCookie(COOKIE_NAME, { path: "/" });
+  res.clearCookie(COOKIE_NAME, authCookieOptions());
 }
 
 module.exports = {
