@@ -25,7 +25,6 @@ const studios = [
     location: "Bushwick, Brooklyn, NY",
     image: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1567443024551-f3e3cc2be870?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=1600&q=80",
     ],
@@ -49,8 +48,6 @@ const studios = [
     location: "Downtown Los Angeles, CA",
     image: "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&w=1600&q=80",
-      "https://images.unsplash.com/photo-1500210111596-9b2f2ae5b6b4?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1585951237318-9ea5e175b891?auto=format&fit=crop&w=1600&q=80",
     ],
     amenities: ["Green Room", "Grid Rigging", "Loading Dock", "Dressing Rooms", "3-Phase Power", "Production Office"],
@@ -72,7 +69,6 @@ const studios = [
     location: "Shoreditch, London, UK",
     image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&w=1600&q=80",
     ],
     amenities: ["4x Shure SM7B", "RØDECaster Pro II", "Acoustic Treatment", "Stream Deck", "Coffee Bar", "Wi-Fi"],
@@ -94,7 +90,6 @@ const studios = [
     location: "Silver Lake, Los Angeles, CA",
     image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1519508234439-4f23643125c1?auto=format&fit=crop&w=1600&q=80",
     ],
     amenities: ["Neve Console", "Live Room", "Vocal Booth", "Monitoring", "Backline", "Engineer On Call"],
@@ -116,7 +111,6 @@ const studios = [
     location: "Williamsburg, Brooklyn, NY",
     image: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1493106641515-6b5631de4bb9?auto=format&fit=crop&w=1600&q=80",
     ],
     amenities: ["12 Pottery Wheels", "2 Kilns", "Slab Roller", "Wash Stations", "Natural Light", "Aprons Included"],
@@ -135,10 +129,7 @@ const studios = [
     maxCapacity: 20,
     location: "Atlanta, GA",
     image: "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1200&q=80",
-    gallery: [
-      "https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=1600&q=80",
-      "https://images.unsplash.com/photo-1500210111596-9b2f2ae5b6b4?auto=format&fit=crop&w=1600&q=80",
-    ],
+    gallery: [],
     amenities: ["20ft Green Screen", "Dimmer Rack", "Grip Package", "Client Lounge", "Wi-Fi", "Craft Services Area"],
     overview:
       "A flexible film stage with a 20ft chroma-green wall, full dimmer rack and grip package included. Client lounge with live camera feed so producers can watch in comfort.",
@@ -156,7 +147,6 @@ const studios = [
     location: "Mission District, San Francisco, CA",
     image: "https://images.unsplash.com/photo-1554048612-b6a482bc67e5?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1554048612-b6a482bc67e5?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80",
     ],
     amenities: ["North-Facing Windows", "Seamless Paper", "C-Stands", "Wi-Fi", "Changing Room", "Freight Elevator"],
@@ -176,7 +166,6 @@ const studios = [
     location: "Austin, TX",
     image: "https://images.unsplash.com/photo-1589903308904-1010c2294adc?auto=format&fit=crop&w=1200&q=80",
     gallery: [
-      "https://images.unsplash.com/photo-1589903308904-1010c2294adc?auto=format&fit=crop&w=1600&q=80",
       "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1600&q=80",
     ],
     amenities: ["4K Cameras", "Elgato Key Lights", "Sound Panels", "Teleprompter", "Wi-Fi", "Streaming PC"],
