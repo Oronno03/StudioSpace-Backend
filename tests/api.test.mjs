@@ -24,8 +24,8 @@ function jar() {
   return { cookie: "" };
 }
 
-async function call(method, path, { body, cookie } = {}) {
-  const headers = {};
+async function call(method, path, { body, cookie, headers: extraHeaders } = {}) {
+  const headers = { ...(extraHeaders || {}) };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (cookie) headers["Cookie"] = cookie;
 
@@ -157,6 +157,18 @@ async function main() {
   r = await call("GET", "/api/bookings/mine", { cookie: H.cookie });
   ok("GET /api/bookings/mine contains booking", r.status === 200 && r.data.bookings.some((b) => b._id === booking._id), r.status);
 
+  // A second request for an overlapping window must be rejected even while
+  // the first reservation is still Pending (the host has not confirmed yet).
+  r = await call("POST", "/api/bookings", {
+    cookie: H.cookie,
+    body: { studioId: sample._id, date, startTime: "12:00", endTime: "16:00" },
+  });
+  ok(
+    "Overlapping Pending booking → 409 + code",
+    r.status === 409 && r.data?.code === "BOOKING_CONFLICT" && /already booked/i.test(r.data?.message || ""),
+    `${r.status} ${r.data?.message}`
+  );
+
   // Host confirms the booking
   r = await call("PATCH", `/api/bookings/${booking._id}/status`, {
     cookie: M.cookie,
@@ -169,7 +181,11 @@ async function main() {
     cookie: H.cookie,
     body: { studioId: sample._id, date, startTime: "12:00", endTime: "16:00" },
   });
-  ok("Overlapping booking → 409 with clear message", r.status === 409 && /already booked/i.test(r.data.message), `${r.status} ${r.data?.message}`);
+  ok(
+    "Overlapping Confirmed booking → 409 with clear message",
+    r.status === 409 && /already booked/i.test(r.data.message) && r.data?.code === "BOOKING_CONFLICT",
+    `${r.status} ${r.data?.message}`
+  );
 
   // Adjacent request should be allowed
   r = await call("POST", "/api/bookings", {
@@ -185,6 +201,14 @@ async function main() {
     body: { status: "Cancelled" },
   });
   ok("Guest cancels own Pending booking → 200", r.status === 200 && r.data.booking.status === "Cancelled", r.status);
+
+  // A cancelled reservation releases its window.
+  r = await call("POST", "/api/bookings", {
+    cookie: H.cookie,
+    body: { studioId: sample._id, date, startTime: "15:00", endTime: "16:00" },
+  });
+  ok("Cancelled slot can be rebooked → 201", r.status === 201, `${r.status} ${r.data?.message}`);
+  const released = r.data?.booking;
 
   // Guest cannot cancel a confirmed booking
   r = await call("PATCH", `/api/bookings/${booking._id}/status`, {
@@ -205,6 +229,12 @@ async function main() {
     cookie: M.cookie,
     body: { status: "Cancelled" },
   });
+  if (released?._id) {
+    await call("PATCH", `/api/bookings/${released._id}/status`, {
+      cookie: H.cookie,
+      body: { status: "Cancelled" },
+    });
+  }
 
   console.log("\n== Wishlist ==");
   r = await call("POST", `/api/wishlist/${sample._id}/toggle`, { cookie: H.cookie });
@@ -215,6 +245,80 @@ async function main() {
 
   r = await call("POST", `/api/wishlist/${sample._id}/toggle`, { cookie: H.cookie });
   ok("Toggle wishlist off → saved false", r.status === 200 && r.data.saved === false, `${r.status}/${r.data?.saved}`);
+
+  console.log("\n== BetterAuth MongoDB adapter & session handling ==");
+  const TEST_ORIGIN =
+    process.env.TEST_ORIGIN ||
+    (BASE.includes("localhost")
+      ? "http://localhost:3000"
+      : "https://studiospace-live.vercel.app");
+
+  r = await call("GET", "/api/auth/ok");
+  ok("GET /api/auth/ok → BetterAuth mounted", r.status === 200, r.status);
+
+  r = await call("POST", "/api/auth/one-tap/callback", {
+    body: { idToken: "not-a-real-google-token" },
+    headers: { Origin: TEST_ORIGIN },
+  });
+  ok(
+    "BetterAuth Google One Tap route rejects invalid token → 400",
+    r.status === 400,
+    `${r.status} ${r.data?.message}`
+  );
+
+  const baEmail = `better-auth-${Date.now()}@studiospace.dev`;
+  r = await call("POST", "/api/auth/sign-up/email", {
+    body: { name: "Better Auth Tester", email: baEmail, password: "Password123" },
+    headers: { Origin: TEST_ORIGIN },
+  });
+  const BA = jar();
+  BA.cookie = r.cookie;
+  ok(
+    "BetterAuth sign-up → session cookie",
+    (r.status === 200 || r.status === 201) && /better-auth\.session_token/.test(BA.cookie),
+    `${r.status}/${BA.cookie}`
+  );
+
+  r = await call("GET", "/api/auth/get-session", { cookie: BA.cookie });
+  ok(
+    "BetterAuth get-session → MongoDB session user",
+    r.status === 200 && r.data?.user?.email === baEmail,
+    `${r.status}/${r.data?.user?.email}`
+  );
+
+  r = await call("GET", "/api/studios/mine", { cookie: BA.cookie });
+  ok("BetterAuth session authenticates protected GET", r.status === 200, r.status);
+
+  r = await call("POST", "/api/studios", {
+    cookie: BA.cookie,
+    body: {
+      title: "BetterAuth Session Studio",
+      category: "Art Workshop",
+      hourlyRate: 35,
+      securityDeposit: 25,
+      maxCapacity: 6,
+      location: "Session City, TX",
+      image: "https://images.unsplash.com/photo-1513364776144-60967b0f800f",
+      amenities: ["Wi-Fi"],
+      overview: "Created by the BetterAuth session integration test.",
+    },
+  });
+  ok("BetterAuth session authorizes protected POST", r.status === 201, r.status);
+  const baStudio = r.data?.studio;
+
+  if (baStudio?._id) {
+    r = await call("DELETE", `/api/studios/${baStudio._id}`, { cookie: BA.cookie });
+    ok("BetterAuth session authorizes protected DELETE", r.status === 200, r.status);
+  }
+
+  r = await call("POST", "/api/auth/sign-out", {
+    cookie: BA.cookie,
+    headers: { Origin: TEST_ORIGIN },
+  });
+  ok("BetterAuth sign-out → 200", r.status === 200, r.status);
+
+  r = await call("GET", "/api/auth/get-session", { cookie: BA.cookie });
+  ok("BetterAuth session revoked after sign-out", r.status === 200 && !r.data?.user, `${r.status}/${r.data?.user?.email}`);
 
   console.log("\n== Logout & error handling ==");
   r = await call("POST", "/api/auth/logout", { cookie: H.cookie });

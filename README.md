@@ -6,8 +6,8 @@ Backend for **StudioSpace** — a peer-to-peer creative workspace & production s
 
 - **Runtime:** Node.js + Express 5 (ES modules, `"type": "module"`)
 - **Database:** MongoDB (Mongoose)
-- **Auth:** JWT stored in an **HTTPOnly cookie** (Challenge 1), plus Google sign-in
-- **Security:** password hashing with bcryptjs, CORS restricted to the client origin
+- **Auth:** BetterAuth (MongoDB adapter + sessions) for Google One Tap and standard session endpoints, plus the existing JWT-in-an-HTTPOnly-cookie flow
+- **Security:** password hashing with bcryptjs, CORS restricted to the client origin, BetterAuth CSRF/origin checks
 
 ## Quick start
 
@@ -31,9 +31,15 @@ npm run dev               # starts http://localhost:5000
 |--------|--------------------------------|--------|-------------|
 | POST   | `/api/auth/register`           | –      | Create account, sets JWT cookie |
 | POST   | `/api/auth/login`              | –      | Log in, sets JWT cookie |
-| POST   | `/api/auth/google`             | –      | Google sign-in, sets JWT cookie |
-| GET    | `/api/auth/me`                 | cookie | Current user |
-| POST   | `/api/auth/logout`             | –      | Clears cookie |
+| POST   | `/api/auth/google`             | –      | Legacy Google ID-token sign-in, sets JWT cookie |
+| GET    | `/api/auth/me`                 | cookie | Current user (JWT or BetterAuth session) |
+| POST   | `/api/auth/logout`             | –      | Revokes BetterAuth session + clears both cookies |
+| POST   | `/api/auth/sign-up/email`      | –      | BetterAuth email/password sign-up |
+| POST   | `/api/auth/sign-in/email`      | –      | BetterAuth email/password sign-in |
+| GET    | `/api/auth/get-session`        | cookie | BetterAuth session + user from MongoDB |
+| POST   | `/api/auth/one-tap/callback`   | –      | BetterAuth Google One Tap (Google ID token) |
+| POST   | `/api/auth/sign-out`           | cookie | Revoke the BetterAuth session |
+| GET    | `/api/auth/ok`                 | –      | BetterAuth mount health check |
 | GET    | `/api/studios`                 | –      | List + filter/search studios |
 | GET    | `/api/studios/featured`        | –      | Top 6 studios (home page) |
 | GET    | `/api/studios/mine`            | cookie | Current host's listings |
@@ -48,10 +54,22 @@ npm run dev               # starts http://localhost:5000
 | GET    | `/api/wishlist`                | cookie | Saved studios |
 | POST   | `/api/wishlist/:studioId/toggle` | cookie | Toggle saved studio |
 
+## Authentication (BetterAuth + JWT)
+
+BetterAuth is mounted at `/api/auth/*` in `src/app.js` **before** `express.json()`, so it can read the raw request stream. It is configured in `src/better-auth.js` with:
+
+- `mongodbAdapter(client.db(), { client })` — BetterAuth stores `user`, `session`, `account`, `verification` and `jwks` documents in the same MongoDB database as the app.
+- `emailAndPassword` — standard BetterAuth sign-up/sign-in endpoints.
+- `oneTap()` — verifies the Google ID token from Google Identity Services and creates a BetterAuth session.
+- `jwt()` — exposes BetterAuth's signed-JWT/JWKS support.
+- Seven-day sessions with daily rolling refresh and `SameSite=None; Secure` cookies in production.
+
+The existing StudioSpace login/register forms still issue the `studiospace_token` JWT cookie. `attachUser` in `src/middleware/auth.js` accepts **either** credential, so all protected routes work with a BetterAuth session too. When a BetterAuth user first calls an app route, their profile is mirrored into the app's `users` collection so wishlists, listings and bookings keep a single identity.
+
 ## Challenges implemented
 
-1. **JWT in HTTPOnly cookies** — all mutations (`POST /api/studios`, `DELETE /api/studios/:id`, `POST /api/bookings`, …) reject unauthenticated requests with `401 Unauthorized`.
-2. **Double-booking prevention** — `POST /api/bookings` checks the requested window against existing *Confirmed* bookings for the same studio and rejects overlaps with `409 Conflict`.
+1. **JWT in HTTPOnly cookies** — all mutations (`POST /api/studios`, `DELETE /api/studios/:id`, `POST /api/bookings`, …) reject unauthenticated requests with `401 Unauthorized`. BetterAuth sessions are accepted by the same guard.
+2. **Double-booking prevention** — `POST /api/bookings` rejects any overlap (`StartA < EndB && EndA > StartB`) with an active **Pending or Confirmed** booking for the same studio and date using `409 Conflict` plus a descriptive `BOOKING_CONFLICT` payload. Confirming a booking re-checks against other **Confirmed** bookings, so two pending overlaps can never both be confirmed. Cancelled slots are released.
 
 ## Testing
 
@@ -59,7 +77,7 @@ npm run dev               # starts http://localhost:5000
 node tests/api.test.mjs
 ```
 
-Runs 34 end-to-end assertions against a running server + seeded data: health, listing filters, auth guards, registration validation, studio CRUD, booking workflow, overlap rejection, cancellation rules, wishlist and logout.
+Runs 45 end-to-end assertions against a running server + seeded data: health, listing filters, auth guards, registration validation, studio CRUD, pending/confirmed overlap rejection, cancellation rules, cancelled-slot release, wishlist, BetterAuth sign-up/session/get-session/sign-out, and logout.
 
 ## Deployment
 
@@ -72,16 +90,18 @@ Production environment variables:
 | Variable | Purpose |
 |----------|---------|
 | `MONGODB_URI` | MongoDB Atlas connection string |
-| `JWT_SECRET` | Signs the HTTPOnly session cookie |
+| `JWT_SECRET` | Signs the app's HTTPOnly JWT cookie |
+| `BETTER_AUTH_SECRET` | 32+ character BetterAuth secret (sessions, JWT plugin) |
+| `BETTER_AUTH_URL` | Public API origin, e.g. `https://studiospace-api-flax.vercel.app` |
 | `CLIENT_ORIGIN` | Comma-separated allowed frontend origins |
-| `GOOGLE_CLIENT_ID` | Verifies Google ID tokens |
-| `COOKIE_CROSS_SITE` | `true` on Vercel so the session cookie uses `SameSite=None; Secure` |
+| `GOOGLE_CLIENT_ID` | Verifies Google ID tokens / Google One Tap audience |
+| `COOKIE_CROSS_SITE` | `true` on Vercel so cookies use `SameSite=None; Secure` |
 
 MongoDB Atlas must allow the Vercel function's outbound IPs. For this demo the
 Atlas network access list includes `0.0.0.0/0`.
 
 ## Notes
 
-- New bookings always start as `Pending`; only the studio owner can confirm, complete or decline them (`PATCH /api/bookings/:id/status`).
-- Google sign-in verifies ID tokens against `GOOGLE_CLIENT_ID`; if the variable is empty it falls back to a demo mode for local development only.
+- New bookings always start as `Pending`; only the studio owner can confirm, complete or decline them (`PATCH /api/bookings/:id/status`). Pending and Confirmed reservations both reserve their window; Cancelled reservations release it.
+- Google sign-in first goes through BetterAuth's Google One Tap endpoint (`/api/auth/one-tap/callback`). The legacy `/api/auth/google` verified-ID-token endpoint remains as a fallback; if `GOOGLE_CLIENT_ID` is empty it offers a demo mode for local development only.
 - `.env` is git-ignored — use `.env.example` as the template.

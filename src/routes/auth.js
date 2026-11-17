@@ -1,12 +1,16 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import { OAuth2Client } from "google-auth-library";
+import { fromNodeHeaders } from "better-auth/node";
 import User from "../models/User.js";
+import { getAuth } from "../better-auth.js";
 import {
   signToken,
   requireAuth,
   setAuthCookie,
   clearAuthCookie,
+  clearBetterAuthCookies,
+  hasBetterAuthSessionCookie,
 } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -163,8 +167,19 @@ router.get("/me", requireAuth, async (req, res) => {
 });
 
 // ---------- Logout ----------
-router.post("/logout", (req, res) => {
+router.post("/logout", async (req, res) => {
+  // If the browser is using a BetterAuth session, revoke it server-side too.
+  if (hasBetterAuthSessionCookie(req.cookies)) {
+    try {
+      const auth = await getAuth();
+      await auth.api.signOut({ headers: fromNodeHeaders(req.headers) });
+    } catch (err) {
+      console.error("[auth] BetterAuth sign-out failed:", err.message);
+    }
+  }
+
   clearAuthCookie(res);
+  clearBetterAuthCookies(res);
   res.json({ message: "Logged out." });
 });
 

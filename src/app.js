@@ -2,8 +2,10 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { toNodeHandler } from "better-auth/node";
 
 import connectDB from "./db.js";
+import { getAuth } from "./better-auth.js";
 import authRoutes from "./routes/auth.js";
 import studioRoutes from "./routes/studios.js";
 import bookingRoutes from "./routes/bookings.js";
@@ -12,9 +14,18 @@ import { attachUser } from "./middleware/auth.js";
 
 const app = express();
 
-const origins = (process.env.CLIENT_ORIGIN || "http://localhost:3000")
-  .split(",")
-  .map((o) => o.trim());
+app.set("trust proxy", 1);
+
+const origins = [
+  ...new Set([
+    ...(process.env.CLIENT_ORIGIN || "http://localhost:3000")
+      .split(",")
+      .map((o) => o.trim())
+      .filter(Boolean),
+    "http://localhost:3000",
+    "https://studiospace-live.vercel.app",
+  ]),
+];
 
 app.use(
   cors({
@@ -22,6 +33,31 @@ app.use(
     credentials: true,
   }),
 );
+
+// StudioSpace keeps its existing JWT endpoints under /api/auth. Everything
+// else under that prefix belongs to BetterAuth (session, sign-in, one-tap,
+// sign-out, etc.). BetterAuth must be mounted before express.json() because
+// it reads the raw request stream itself.
+const STUDIOSPACE_AUTH_ROUTES = new Set([
+  "login",
+  "register",
+  "google",
+  "me",
+  "logout",
+]);
+
+app.all("/api/auth/{*any}", async (req, res, next) => {
+  const segment = req.path.replace(/^\/api\/auth\/?/, "").split("/")[0];
+  if (STUDIOSPACE_AUTH_ROUTES.has(segment)) return next();
+
+  try {
+    const auth = await getAuth();
+    await toNodeHandler(auth)(req, res);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
 
