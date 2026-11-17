@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { MongoClient } from "mongodb";
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { jwt, oneTap } from "better-auth/plugins";
+import { oneTap } from "better-auth/plugins";
 
 /**
  * BetterAuth owns its own MongoDB collections (user, session, account,
@@ -95,9 +95,10 @@ async function buildAuth() {
     plugins: [
       // Google Identity Services sends a Google ID token from the browser.
       // BetterAuth verifies it and creates its own HTTPOnly session cookie.
+      // The optional jwt() plugin is intentionally not used: sessions are
+      // already handled here, and its shared JWKS encryption would couple the
+      // database to one environment's BETTER_AUTH_SECRET.
       oneTap({ clientId: process.env.GOOGLE_CLIENT_ID || undefined }),
-      // Challenge 1 alignment: BetterAuth can also issue signed JWTs/JWKS.
-      jwt(),
     ],
     advanced: {
       defaultCookieAttributes: {

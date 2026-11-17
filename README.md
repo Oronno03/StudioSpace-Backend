@@ -58,10 +58,9 @@ npm run dev               # starts http://localhost:5000
 
 BetterAuth is mounted at `/api/auth/*` in `src/app.js` **before** `express.json()`, so it can read the raw request stream. It is configured in `src/better-auth.js` with:
 
-- `mongodbAdapter(client.db(), { client })` — BetterAuth stores `user`, `session`, `account`, `verification` and `jwks` documents in the same MongoDB database as the app.
+- `mongodbAdapter(client.db(), { client })` — BetterAuth stores `user`, `session`, `account` and `verification` documents in the same MongoDB database as the app.
 - `emailAndPassword` — standard BetterAuth sign-up/sign-in endpoints.
 - `oneTap()` — verifies the Google ID token from Google Identity Services and creates a BetterAuth session.
-- `jwt()` — exposes BetterAuth's signed-JWT/JWKS support.
 - Seven-day sessions with daily rolling refresh and `SameSite=None; Secure` cookies in production.
 
 The existing StudioSpace login/register forms still issue the `studiospace_token` JWT cookie. `attachUser` in `src/middleware/auth.js` accepts **either** credential, so all protected routes work with a BetterAuth session too. When a BetterAuth user first calls an app route, their profile is mirrored into the app's `users` collection so wishlists, listings and bookings keep a single identity.
